@@ -22,6 +22,13 @@ func Listen(opts ...config.Option) error {
 		return xerrors.Errorf("config.Set() error: %w", err)
 	}
 
+	go func() {
+		err = monitoring()
+		if err != nil {
+			//return xerrors.Errorf("monitoring error: %w", err)
+		}
+	}()
+
 	//TODO goが存在するかの確認
 	terminal.Start()
 

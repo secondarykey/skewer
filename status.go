@@ -9,6 +9,7 @@ const (
 	BuildErrorStatus
 	StartupStatus
 	StartupErrorStatus
+	WaitingForRebootStatus
 	OKStatus
 )
 

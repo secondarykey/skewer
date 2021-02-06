@@ -48,5 +48,7 @@ func Run(name string, files []string) error {
 		return xerrors.Errorf("command wait error: %w", err)
 	}
 
+	//go.mod 位置を追加
+
 	return nil
 }
