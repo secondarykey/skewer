@@ -4,22 +4,28 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 )
 
 func Listen() error {
 
 	//goが存在するかの確認
+	go func() {
+		quit := make(chan os.Signal)
+		// 受け取るシグナルを設定
+		signal.Notify(quit, os.Interrupt)
+		<-quit
+
+		log.Println("処理中...")
+		time.Sleep(2 * time.Second)
+		log.Println("オワタよ")
+		os.Exit(0)
+	}()
 
 	//use goroutine
 	b := build.Run("skewer-bin")
-
-	go func() {
-		for {
-			select {
-			case <-b:
-			}
-		}
-	}()
 
 	//シグナル待受
 	http.HandleFunc("/", proxyHandler)
@@ -52,4 +58,7 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	return
+}
+
+func cleanup() {
 }
