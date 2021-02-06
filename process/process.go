@@ -37,8 +37,9 @@ func Run(name string) error {
 	}
 
 	//TODO 起動中のエラーを取りたい
-
 	current = cmd.Process
+
+	//TODO 起動監視
 
 	return nil
 }

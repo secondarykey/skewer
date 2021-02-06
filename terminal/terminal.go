@@ -1,9 +1,15 @@
 package terminal
 
 import (
+	"io"
 	"log"
 	"os"
 )
+
+var buildOut io.Writer
+var buildErr io.Writer
+var processOut io.Writer
+var processErr io.Writer
 
 func Start() error {
 	log.Println("skewer start.")
