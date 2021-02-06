@@ -22,14 +22,8 @@ func startProxyServer(port int) error {
 func proxyHandler(w http.ResponseWriter, r *http.Request) {
 
 	status := getStatus()
-	//TODO 現状のビルド状況を確認
-	if status == WaitingForRebootStatus {
-		conf := config.Get()
-		bin := conf.Bin
-		cleanup(bin)
-		go startServer(bin, conf.AppPort, conf.Args)
-		return
-	} else if status != OKStatus {
+	if status != OKStatus {
+		//TODO ビルドなどのエラーを表示
 		w.Write([]byte("<h1>skewer error</h1>"))
 		return
 	}

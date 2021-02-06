@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/secondarykey/skewer/terminal"
+
 	"golang.org/x/xerrors"
 )
 
@@ -36,19 +38,19 @@ func Run(name string, files []string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	log.Println("build start")
+	terminal.Verbose("build start")
 	err := cmd.Start()
 	if err != nil {
 		return xerrors.Errorf("go build error: %w", err)
 	}
 
-	log.Println("build wait...")
+	terminal.Verbose("build wait...")
 	err = cmd.Wait()
 	if err != nil {
 		return xerrors.Errorf("command wait error: %w", err)
 	}
 
-	//go.mod 位置を追加
+	terminal.Verbose("build complate")
 
 	return nil
 }

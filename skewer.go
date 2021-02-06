@@ -22,18 +22,18 @@ func Listen(opts ...config.Option) error {
 		return xerrors.Errorf("config.Set() error: %w", err)
 	}
 
+	conf := config.Get()
+
 	go func() {
-		err = monitoring()
+		err = monitoring(conf.Args)
 		if err != nil {
-			//return xerrors.Errorf("monitoring error: %w", err)
+			log.Printf("monitoring error: %+v\n", err)
 		}
 	}()
 
 	//TODO goが存在するかの確認
 	terminal.Start()
 
-	conf := config.Get()
-	args := conf.Args
 	bin := conf.Bin
 
 	//シグナル待受
@@ -44,11 +44,11 @@ func Listen(opts ...config.Option) error {
 		<-quit
 
 		cleanup(bin)
-
 		terminal.End()
 	}()
 
-	go startServer(bin, conf.AppPort, args)
+	setStatus(WaitingForRebootStatus)
+	go rebuildMonitor(10)
 
 	return startProxyServer(conf.Port)
 }
@@ -86,6 +86,9 @@ func cleanup(bin string) {
 		log.Println(err)
 	}
 
+	//TODO 付け焼き刃
+	time.Sleep(1 * time.Second)
+
 	err = os.Remove(bin)
 	if err != nil {
 		log.Println(err)
@@ -98,6 +101,8 @@ func startServer(bin string, port int, args []string) {
 	//use goroutine
 	err := build.Run(bin, args)
 	if err != nil {
+		//TODO build error
+		log.Printf("build error: ============\n%+v", err)
 		setStatus(BuildErrorStatus)
 		return
 	}
@@ -106,13 +111,18 @@ func startServer(bin string, port int, args []string) {
 	//コマンドを実行
 	err = process.Run(bin)
 	if err != nil {
+		log.Printf("process error: ============\n%+v", err)
 		setStatus(StartupErrorStatus)
 		return
 	}
 
+	//TODO エラー時の挙動
 	go func() {
 		ch, err := checkConnection(port)
 		if err != nil {
+			log.Printf("connection error: ============\n%+v", err)
+			setStatus(StartupErrorStatus)
+			return
 		}
 
 		v := <-ch

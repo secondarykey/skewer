@@ -20,3 +20,7 @@ func End() {
 	log.Println("skewer terminated.")
 	os.Exit(0)
 }
+
+func Verbose(args ...interface{}) {
+	log.Println(args...)
+}

@@ -13,13 +13,6 @@ var current *os.Process
 
 func Run(name string) error {
 
-	if current != nil {
-		err := Kill()
-		if err != nil {
-			return err
-		}
-	}
-
 	wd, err := os.Getwd()
 	if err != nil {
 		return xerrors.Errorf("work directory get error: %w", err)
@@ -36,15 +29,13 @@ func Run(name string) error {
 		return xerrors.Errorf("http server start error: %w", err)
 	}
 
-	//TODO 起動中のエラーを取りたい
 	current = cmd.Process
-
-	//TODO 起動監視
 
 	return nil
 }
 
 func Kill() error {
+	//TODO リトライする
 	if current != nil {
 		err := current.Kill()
 		if err != nil {
