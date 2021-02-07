@@ -7,17 +7,16 @@ import (
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/secondarykey/skewer/terminal"
 	"golang.org/x/xerrors"
 )
 
-func monitoring(args []string) error {
+func monitoring(args []string, patterns []string) error {
 
 	mod := searchPath(args)
 	if mod == "" {
 		return fmt.Errorf("not found go.mod file.")
 	}
-
-	fmt.Println(mod)
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -25,9 +24,9 @@ func monitoring(args []string) error {
 	}
 	defer watcher.Close()
 
-	err = watcher.Add(mod)
+	err = registerWatcher(watcher, mod)
 	if err != nil {
-		return xerrors.Errorf("watcher.Add() error: %w", err)
+		return xerrors.Errorf("registerWatcher() error: %w", err)
 	}
 
 	for {
@@ -37,15 +36,17 @@ func monitoring(args []string) error {
 				return fmt.Errorf("not ok")
 			}
 
-			//TODO ignore
+			if !ignoreFile(event.Name, patterns) {
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					//log.Println("modified file:", event.Name)
+				}
 
-			//log.Println("event:", event)
-			if event.Op&fsnotify.Write == fsnotify.Write {
-				//log.Println("modified file:", event.Name)
-			}
-
-			if getStatus() == OKStatus {
-				setStatus(WaitingForRebootStatus)
+				s := getStatus()
+				if s.reboot() {
+					terminal.Verbose(event.Name)
+					log.Println("Waiting for reboot.")
+					setStatus(WaitingForRebootStatus)
+				}
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
@@ -58,58 +59,74 @@ func monitoring(args []string) error {
 	return nil
 }
 
+func ignoreFile(path string, patterns []string) bool {
+
+	name := filepath.Base(path)
+	for _, pattern := range patterns {
+		if match, err := filepath.Match(pattern, name); match {
+			return true
+		} else if err != nil {
+			log.Println(err)
+		}
+	}
+	return false
+}
+
+func registerWatcher(w *fsnotify.Watcher, path string) error {
+	err := w.Add(path)
+	if err != nil {
+		return xerrors.Errorf("watcher.Add() error: %w", err)
+	}
+	entry, err := os.ReadDir(path)
+	if err != nil {
+		return xerrors.Errorf("os.ReadDir() error: %w", err)
+	}
+
+	for _, info := range entry {
+		if info.IsDir() {
+			err := registerWatcher(w, filepath.Join(path, info.Name()))
+			if err != nil {
+				return xerrors.Errorf("registerWatcher() error: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
 const ModFile = "go.mod"
 
 func searchPath(files []string) string {
 
 	for _, elm := range files {
+
 		abs, err := filepath.Abs(elm)
 		if err == nil {
-			if err == nil {
-				dir := searchModFile(abs)
-				if dir != "" {
-					return dir
-				}
-			} else {
-				//TODO Glob
-			}
+			dir := filepath.Dir(abs)
+			return searchModFile(dir)
+		} else {
+			//TODO Glob
 		}
-
 	}
 
 	return ""
 }
 
-func searchModFile(file string) string {
-	info, err := os.Stat(file)
+func searchModFile(dir string) string {
+
+	entry, err := os.ReadDir(dir)
 	if err != nil {
 		return ""
 	}
-	if err == nil {
-		name := info.Name()
-		if info.IsDir() {
-			infos, err := os.ReadDir(name)
-			if err != nil {
-				return ""
-			}
-			for _, elm := range infos {
-				dir := searchModFile(elm.Name())
-				if dir != "" {
-					return dir
-				}
-			}
-		} else {
-			dir := filepath.Dir(name)
-			base := filepath.Base(name)
-			if base == ModFile {
-				return dir
-			}
 
-			rtn := searchModFile(dir)
-			if rtn != "" {
-				return rtn
-			}
+	for _, elm := range entry {
+		if elm.Name() == ModFile {
+			return dir
 		}
 	}
-	return ""
+
+	rtn := filepath.Dir(dir)
+	if rtn == dir {
+		return ""
+	}
+	return searchModFile(rtn)
 }

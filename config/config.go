@@ -7,13 +7,14 @@ import (
 )
 
 type Config struct {
-	Port    int
-	AppPort int
-	Verbose bool
-	Schema  string
-	Server  string
-	Bin     string
-	Args    []string
+	Port        int
+	AppPort     int
+	Verbose     bool
+	Schema      string
+	Server      string
+	Bin         string
+	Args        []string
+	IgnoreFiles []string
 }
 
 var gConf *Config
@@ -41,6 +42,8 @@ func defaultConfig() *Config {
 	conf.Schema = "http"
 	conf.Server = "localhost"
 	conf.Args = nil
+	conf.IgnoreFiles = make([]string, 0)
+	conf.IgnoreFiles = append(conf.IgnoreFiles, ".*")
 
 	exe := ""
 	if runtime.GOOS == "windows" {

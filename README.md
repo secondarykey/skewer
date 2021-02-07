@@ -25,5 +25,4 @@ skewer main.go
 config : 設定の保持
 build : ビルドを行う
 process : 相手サーバのプロセスの管理
-proxy : プロキシ部分
 terminal : 端末の表示を管理

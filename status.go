@@ -31,6 +31,20 @@ func setStatus(s Status) {
 	terminal.Verbose("Status:", s)
 }
 
+func (s Status) reboot() bool {
+	if s == OKStatus || s == BuildErrorStatus || s == StartupErrorStatus {
+		return true
+	}
+	return false
+}
+
+func (s Status) canBuild() bool {
+	if s == WaitingForRebootStatus {
+		return true
+	}
+	return false
+}
+
 func (s Status) String() string {
 	switch s {
 	case ReadyStatus:
@@ -53,7 +67,7 @@ func (s Status) String() string {
 	return "NotFound Status"
 }
 
-func rebuildMonitor(s int) error {
+func rebuildMonitor(s int, ch chan error) error {
 
 	conf := config.Get()
 	bin := conf.Bin
@@ -62,9 +76,9 @@ func rebuildMonitor(s int) error {
 	for range time.Tick(d) {
 		status := getStatus()
 		//ビルド待ちだった場合
-		if status == WaitingForRebootStatus {
+		if status.canBuild() {
 			cleanup(bin)
-			go startServer(bin, conf.AppPort, conf.Args)
+			go startServer(bin, conf.AppPort, conf.Args, ch)
 		}
 	}
 

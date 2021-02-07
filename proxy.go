@@ -14,7 +14,7 @@ func startProxyServer(port int) error {
 	http.HandleFunc("/", proxyHandler)
 
 	proxy := fmt.Sprintf(":%d", port)
-	log.Println(proxy, "Start")
+	log.Println("ProxyServer", proxy, "Start")
 
 	return http.ListenAndServe(proxy, nil)
 }

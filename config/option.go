@@ -13,3 +13,10 @@ func SetArgs(args []string) Option {
 		return nil
 	}
 }
+
+func SetVerbose(v bool) Option {
+	return func(c *Config) error {
+		c.Verbose = v
+		return nil
+	}
+}

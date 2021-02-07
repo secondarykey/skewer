@@ -11,8 +11,11 @@ var buildErr io.Writer
 var processOut io.Writer
 var processErr io.Writer
 
-func Start() error {
+var verbose bool
+
+func Start(v bool) error {
 	log.Println("skewer start.")
+	verbose = v
 	return nil
 }
 
@@ -21,6 +24,11 @@ func End() {
 	os.Exit(0)
 }
 
+func SetVerbose(v bool) {
+}
+
 func Verbose(args ...interface{}) {
-	log.Println(args...)
+	if verbose {
+		log.Println(args...)
+	}
 }

@@ -1,7 +1,6 @@
 package process
 
 import (
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,7 +10,7 @@ import (
 
 var current *os.Process
 
-func Run(name string) error {
+func Run(name string, ch chan error) error {
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -22,13 +21,10 @@ func Run(name string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	log.Println("HTTP Server Start")
-
 	err = cmd.Start()
 	if err != nil {
 		return xerrors.Errorf("http server start error: %w", err)
 	}
-
 	current = cmd.Process
 
 	return nil
