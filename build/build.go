@@ -3,7 +3,6 @@ package build
 import (
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 
 	"github.com/secondarykey/skewer/terminal"
@@ -35,22 +34,32 @@ func Run(name string, files []string) error {
 	//指定されたファイルをnameでビルド
 	cmd := exec.Command("go", args...)
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return xerrors.Errorf("StdoutPipe error: %w", err)
+	}
 
-	terminal.Verbose("build start")
-	err := cmd.Start()
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return xerrors.Errorf("StdoutPipe error: %w", err)
+	}
+	terminal.SetPipe(stdout, stderr)
+
+	terminal.Verbose("Build Start.")
+	terminal.Verbose(cmd)
+
+	err = cmd.Start()
 	if err != nil {
 		return xerrors.Errorf("go build error: %w", err)
 	}
 
-	terminal.Verbose("build wait...")
+	terminal.Verbose("Build wait...")
 	err = cmd.Wait()
 	if err != nil {
 		return xerrors.Errorf("command wait error: %w", err)
 	}
 
-	terminal.Verbose("build complate")
+	terminal.Verbose("Build Complate.")
 
 	return nil
 }

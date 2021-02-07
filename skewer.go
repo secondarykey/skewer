@@ -25,9 +25,11 @@ func Listen(opts ...config.Option) error {
 	conf := config.Get()
 
 	var ch chan error
+	var done chan error
 
 	terminal.Start(conf.Verbose)
 
+	//monitor
 	go func() {
 		err = monitoring(conf.Args, conf.IgnoreFiles)
 		ch <- err
@@ -55,12 +57,16 @@ func Listen(opts ...config.Option) error {
 
 	//TODO ch を監視
 	go func() {
-		err := <-ch
-		if err != nil {
+		for {
+			err = <-ch
+			if err != nil {
+				msg := fmt.Sprintf("%+v", err)
+				terminal.Verbose(msg)
+			}
 		}
 	}()
 
-	return startProxyServer(conf.Port)
+	return <-done
 }
 
 func checkConnection(port int) (chan bool, error) {
@@ -108,11 +114,13 @@ func cleanup(bin string) {
 
 func startServer(bin string, port int, args []string, ch chan error) {
 
+	log.Println("Build and Launch.")
+
 	setStatus(BuildStatus)
 	//use goroutine
 	err := build.Run(bin, args)
 	if err != nil {
-		log.Printf("build error: ============\n%+v", err)
+		log.Println("Build Error")
 		setStatus(BuildErrorStatus)
 		ch <- err
 		return
@@ -120,9 +128,9 @@ func startServer(bin string, port int, args []string, ch chan error) {
 
 	setStatus(StartupStatus)
 	//コマンドを実行
-	err = process.Run(bin, ch)
+	err = process.Run(bin)
 	if err != nil {
-		log.Printf("process error: ============\n%+v", err)
+		log.Println("Process Run Error")
 		setStatus(StartupErrorStatus)
 		ch <- err
 		return
@@ -131,8 +139,9 @@ func startServer(bin string, port int, args []string, ch chan error) {
 	go func() {
 		check, err := checkConnection(port)
 		if err != nil {
-			log.Printf("connection error: ============\n%+v", err)
+			log.Println("HTTP Connection Error")
 			setStatus(StartupErrorStatus)
+			ch <- err
 			return
 		}
 
@@ -141,6 +150,8 @@ func startServer(bin string, port int, args []string, ch chan error) {
 			log.Println("Complete Build and Launch")
 			setStatus(OKStatus)
 		} else {
+			log.Println("HTTP Server Launch Error")
+			setStatus(StartupErrorStatus)
 		}
 	}()
 }

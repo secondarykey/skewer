@@ -49,7 +49,7 @@ func defaultConfig() *Config {
 	if runtime.GOOS == "windows" {
 		exe = ".exe"
 	}
-	conf.Bin = ".skewer-work-bin" + exe
+	conf.Bin = "skewer-bin" + exe
 
 	return &conf
 }

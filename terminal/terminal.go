@@ -1,15 +1,12 @@
 package terminal
 
 import (
+	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
 )
-
-var buildOut io.Writer
-var buildErr io.Writer
-var processOut io.Writer
-var processErr io.Writer
 
 var verbose bool
 
@@ -24,11 +21,23 @@ func End() {
 	os.Exit(0)
 }
 
-func SetVerbose(v bool) {
-}
-
 func Verbose(args ...interface{}) {
 	if verbose {
 		log.Println(args...)
 	}
+}
+
+func SetPipe(stdout, stderr io.ReadCloser) {
+	setPipe(36, stdout, os.Stderr)
+	setPipe(31, stderr, os.Stderr)
+}
+
+func setPipe(c int, r io.ReadCloser, w io.Writer) {
+	go func() {
+		s := bufio.NewScanner(r)
+		for s.Scan() {
+			fmt.Fprintf(w, "\x1b[%dm| %s\x1b[0m\n", c, s.Text())
+		}
+	}()
+	return
 }

@@ -62,7 +62,7 @@ func (s Status) String() string {
 	case WaitingForRebootStatus:
 		return "HTTP Server waiting for restart(rebuild)."
 	case OKStatus:
-		return "Proxy Server Accessable."
+		return "HTTP Server Accessable."
 	}
 	return "NotFound Status"
 }
@@ -72,9 +72,13 @@ func rebuildMonitor(s int, ch chan error) error {
 	conf := config.Get()
 	bin := conf.Bin
 
+	//初回起動を行う
+	cleanup(bin)
+	go startServer(bin, conf.AppPort, conf.Args, ch)
+
 	d := time.Duration(s) * time.Second
 	for range time.Tick(d) {
-		status := getStatus()
+		status = getStatus()
 		//ビルド待ちだった場合
 		if status.canBuild() {
 			cleanup(bin)
