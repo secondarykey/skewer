@@ -1,14 +1,11 @@
 package config
 
 import (
-	"runtime"
-
 	"golang.org/x/xerrors"
 )
 
 type Config struct {
 	Port        int
-	AppPort     int
 	Verbose     bool
 	Schema      string
 	Server      string
@@ -36,20 +33,13 @@ func Set(opts []Option) error {
 func defaultConfig() *Config {
 
 	conf := Config{}
-	conf.Port = 3000
-	conf.AppPort = 8080
+	conf.Port = 8080
 	conf.Verbose = false
 	conf.Schema = "http"
 	conf.Server = "localhost"
 	conf.Args = nil
-	conf.IgnoreFiles = make([]string, 0)
-	conf.IgnoreFiles = append(conf.IgnoreFiles, ".*")
-
-	exe := ""
-	if runtime.GOOS == "windows" {
-		exe = ".exe"
-	}
-	conf.Bin = "skewer-bin" + exe
+	conf.IgnoreFiles = nil
+	conf.Bin = "skewer-bin"
 
 	return &conf
 }

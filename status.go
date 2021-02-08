@@ -74,7 +74,7 @@ func rebuildMonitor(s int, ch chan error) error {
 
 	//初回起動を行う
 	cleanup(bin)
-	go startServer(bin, conf.AppPort, conf.Args, ch)
+	go startServer(bin, conf.Port, conf.Args, ch)
 
 	d := time.Duration(s) * time.Second
 	for range time.Tick(d) {
@@ -82,7 +82,7 @@ func rebuildMonitor(s int, ch chan error) error {
 		//ビルド待ちだった場合
 		if status.canBuild() {
 			cleanup(bin)
-			go startServer(bin, conf.AppPort, conf.Args, ch)
+			go startServer(bin, conf.Port, conf.Args, ch)
 		}
 	}
 

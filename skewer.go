@@ -31,10 +31,10 @@ func Listen(opts ...config.Option) error {
 
 	//monitor
 	go func() {
+		//エラー処理がおかしい
 		err = monitoring(conf.Args, conf.IgnoreFiles)
 		ch <- err
 		if err != nil {
-			log.Printf("monitoring error: %+v\n", err)
 		}
 	}()
 
@@ -136,22 +136,27 @@ func startServer(bin string, port int, args []string, ch chan error) {
 		return
 	}
 
-	go func() {
-		check, err := checkConnection(port)
-		if err != nil {
-			log.Println("HTTP Connection Error")
-			setStatus(StartupErrorStatus)
-			ch <- err
-			return
-		}
+	if port == 0 {
+		log.Println("Complete Build and Launch")
+		setStatus(OKStatus)
+	} else {
+		go func() {
+			check, err := checkConnection(port)
+			if err != nil {
+				log.Println("HTTP Connection Error")
+				setStatus(StartupErrorStatus)
+				ch <- err
+				return
+			}
 
-		v := <-check
-		if v {
-			log.Println("Complete Build and Launch")
-			setStatus(OKStatus)
-		} else {
-			log.Println("HTTP Server Launch Error")
-			setStatus(StartupErrorStatus)
-		}
-	}()
+			v := <-check
+			if v {
+				log.Println("Complete Build and Launch")
+				setStatus(OKStatus)
+			} else {
+				log.Println("HTTP Server Launch Error")
+				setStatus(StartupErrorStatus)
+			}
+		}()
+	}
 }

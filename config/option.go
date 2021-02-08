@@ -1,6 +1,14 @@
 package config
 
-import "golang.org/x/xerrors"
+import (
+	"fmt"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+
+	"golang.org/x/xerrors"
+)
 
 type Option func(*Config) error
 
@@ -17,6 +25,45 @@ func SetArgs(args []string) Option {
 func SetVerbose(v bool) Option {
 	return func(c *Config) error {
 		c.Verbose = v
+		return nil
+	}
+}
+
+func SetPort(p int, f bool) Option {
+	return func(c *Config) error {
+
+		if f {
+			portBuf := os.Getenv("PORT")
+			if portBuf == "" {
+				return fmt.Errorf(`if "e" is specified as an argument,it must be specified in the "PORT" environment variable.`)
+			}
+			port, err := strconv.Atoi(portBuf)
+			if err != nil {
+				return fmt.Errorf(`the "PORT" environment variable is not number.[%s]`, portBuf)
+			}
+			c.Port = port
+		} else {
+			c.Port = p
+		}
+		return nil
+	}
+}
+
+func SetIgnoreFiles(f string) Option {
+	return func(c *Config) error {
+		files := strings.Split(f, "|")
+		c.IgnoreFiles = files
+		return nil
+	}
+}
+
+func SetBin(n string) Option {
+	return func(c *Config) error {
+		exe := ""
+		if runtime.GOOS == "windows" {
+			exe = ".exe"
+		}
+		c.Bin = n + exe
 		return nil
 	}
 }
