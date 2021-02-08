@@ -1,18 +1,42 @@
-思いつきで作成し始めたGoをリビルドのエンジンです。
-Go1.16からembedが実装され、HTTPのテストが辛くなったので作成しました。
+# skewer is ...
 
-当初プロキシでアクセスできるようにしましたが、
-必要ないことに気づいたのでやめました。
-公開はしますが致命的なバグが見つかっているので使用しないでください。
+It rebuilds the Go source.
+"embed" was implemented from Go1.16, and I wanted to reload HTTP server template.
 
-# コマンド
+# install 
+
+```
+go install github.com/secondarykey/skewer/_cmd/skewer
+```
+
+You should able to "skewer" command in "GOBIN" or "GOPATH/bin".
+
+# Command
+
+Take an argument to build the Go source.
 
 ```
 skewer main.go
 ```
 
-# 引数に指定予定
+Please read Help for details.
 
--t 監視するディレクトリ:デフォルトgo.modの探索位置から下
--a プロセス起動時の引数: デフォルトなし
--d 再起動時間(s): デフォルト5
+# Operation Explanation
+
+It usually looks for "go.mod" and monitors and builds all directories under it.
+If there is an updatei in the monitored directories,it will be rebuild and the process will be starter.
+
+Build temporarily and create a binary file to make the build error easier to understand and process status easier to understand.
+
+At the beginning of development, it was realized as a proxy server, but I realized that it was not necessary and deleted it.
+
+# Issue
+
+I will write a memo for development.
+
+## Argument
+
+-t Change the directory to monitor
+-a Specifying arguments when stating a process.
+-d Monitoring lap time(default 5s)
+
