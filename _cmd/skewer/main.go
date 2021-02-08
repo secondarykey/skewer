@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"os"
 
 	"github.com/secondarykey/skewer"
 	"github.com/secondarykey/skewer/config"
@@ -38,8 +37,11 @@ func main() {
 		config.SetIgnoreFiles(ignoreFiles),
 		config.SetVerbose(verbose))
 	if err != nil {
-		log.Fatalf("Skewer Listen error ------ \n%+v", err)
-		os.Exit(1)
+		//TODO ユーザメッセージをわかりやすくする
+		log.Fatalf("Skewer start error ------ \n%+v", err)
 	}
+
 	log.Println("Terminated...")
 }
+
+//Usage

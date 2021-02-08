@@ -15,8 +15,10 @@ func monitoring(args []string, patterns []string) error {
 
 	mod := searchPath(args)
 	if mod == "" {
-		return fmt.Errorf("not found go.mod file.")
+		return fmt.Errorf("Not found go.mod file.")
 	}
+
+	terminal.Verbose("Specification:", mod)
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -95,16 +97,31 @@ func registerWatcher(w *fsnotify.Watcher, path string) error {
 
 const ModFile = "go.mod"
 
-func searchPath(files []string) string {
+func searchPath(patterns []string) string {
 
-	for _, elm := range files {
+	for _, pattern := range patterns {
 
-		abs, err := filepath.Abs(elm)
-		if err == nil {
+		files, err := filepath.Glob(pattern)
+		if err != nil {
+			continue
+		}
+
+		for _, file := range files {
+			abs, err := filepath.Abs(file)
+			if err != nil {
+				continue
+			}
+
 			dir := filepath.Dir(abs)
+
+			info, err := os.Stat(abs)
+			if err != nil {
+				continue
+			}
+			if info.IsDir() {
+				dir = abs
+			}
 			return searchModFile(dir)
-		} else {
-			//TODO Glob
 		}
 	}
 
