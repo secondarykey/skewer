@@ -29,13 +29,12 @@ func Listen(opts ...config.Option) error {
 
 	terminal.Start(conf.Verbose)
 
-	//monitor
 	go func() {
-		//エラー処理がおかしい
 		err = monitoring(conf.Args, conf.IgnoreFiles)
-		ch <- err
 		if err != nil {
+			setStatus(FatalStatus)
 		}
+		ch <- err
 	}()
 
 	//TODO goが存在するかの確認

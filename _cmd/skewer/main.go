@@ -31,14 +31,17 @@ func main() {
 	args := flag.Args()
 
 	err := skewer.Listen(
+		config.SetVerbose(verbose),
 		config.SetArgs(args),
 		config.SetPort(port, portEnv),
 		config.SetBin(binName),
-		config.SetIgnoreFiles(ignoreFiles),
-		config.SetVerbose(verbose))
+		config.SetIgnoreFiles(ignoreFiles))
+
 	if err != nil {
-		//TODO ユーザメッセージをわかりやすくする
-		log.Fatalf("Skewer start error ------ \n%+v", err)
+		if verbose {
+			log.Printf("%+v\n", err)
+		}
+		log.Fatalf("skewer error:\n%s", err)
 	}
 
 	log.Println("Terminated...")
