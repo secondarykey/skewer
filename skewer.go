@@ -17,6 +17,8 @@ import (
 
 func Listen(opts ...config.Option) error {
 
+	//TODO Goが存在しない場合
+
 	err := config.Set(opts)
 	if err != nil {
 		return xerrors.Errorf("config.Set() error: %w", err)
@@ -24,22 +26,33 @@ func Listen(opts ...config.Option) error {
 
 	conf := config.Get()
 
-	var ch chan error
-	var done chan error
+	ch := make(chan error)
+	done := make(chan error)
 
 	terminal.Start(conf.Verbose)
 
 	go func() {
-		err = monitoring(conf.Args, conf.IgnoreFiles)
-		if err != nil {
-			setStatus(FatalStatus)
+		for {
+			select {
+			case err := <-ch:
+				if err != nil {
+					msg := fmt.Sprintf("%+v", err)
+					terminal.Verbose(msg)
+					if getStatus() == FatalStatus {
+						done <- err
+						return
+					}
+				}
+			default:
+			}
 		}
-		ch <- err
 	}()
 
-	//TODO goが存在するかの確認
-	bin := conf.Bin
+	go func() {
+		notifyMonitoring(conf.Args, conf.IgnoreFiles, ch)
+	}()
 
+	bin := conf.Bin
 	//シグナル待受
 	go func() {
 		quit := make(chan os.Signal)
@@ -53,17 +66,6 @@ func Listen(opts ...config.Option) error {
 
 	setStatus(WaitingForRebootStatus)
 	go rebuildMonitor(5, ch)
-
-	//TODO ch を監視
-	go func() {
-		for {
-			err = <-ch
-			if err != nil {
-				msg := fmt.Sprintf("%+v", err)
-				terminal.Verbose(msg)
-			}
-		}
-	}()
 
 	return <-done
 }
@@ -80,6 +82,7 @@ func checkConnection(port int) (chan bool, error) {
 		var err error
 		for range time.Tick(100 * time.Millisecond) {
 			conn, err = net.Dial("tcp", fmt.Sprintf(":%d", port))
+			//TODO おかしい
 			if err == nil {
 				break
 			}
@@ -141,9 +144,11 @@ func startServer(bin string, port int, args []string, ch chan error) {
 	} else {
 		go func() {
 			check, err := checkConnection(port)
+
 			if err != nil {
 				log.Println("HTTP Connection Error")
 				setStatus(StartupErrorStatus)
+				//TODO おかしい
 				ch <- err
 				return
 			}

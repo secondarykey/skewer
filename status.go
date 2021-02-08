@@ -1,6 +1,7 @@
 package skewer
 
 import (
+	"sync"
 	"time"
 
 	"github.com/secondarykey/skewer/config"
@@ -21,12 +22,20 @@ const (
 )
 
 var status Status = ReadyStatus
+var statusMutex sync.Mutex
 
 func getStatus() Status {
+	statusMutex.Lock()
+	defer statusMutex.Unlock()
 	return status
 }
 
 func setStatus(s Status) {
+	statusMutex.Lock()
+	defer statusMutex.Unlock()
+	if status == FatalStatus {
+		return
+	}
 	status = s
 	terminal.Verbose("Status:", s)
 }
@@ -67,24 +76,22 @@ func (s Status) String() string {
 	return "NotFound Status"
 }
 
-func rebuildMonitor(s int, ch chan error) error {
+func rebuildMonitor(s int, ch chan error) {
 
 	conf := config.Get()
 	bin := conf.Bin
-
-	//初回起動を行う
-	cleanup(bin)
-	go startServer(bin, conf.Port, conf.Args, ch)
-
 	d := time.Duration(s) * time.Second
-	for range time.Tick(d) {
+
+	for {
 		status = getStatus()
-		//ビルド待ちだった場合
 		if status.canBuild() {
 			cleanup(bin)
 			go startServer(bin, conf.Port, conf.Args, ch)
+		} else if status == FatalStatus {
+			return
 		}
+		time.Sleep(d)
 	}
 
-	return nil
+	return
 }

@@ -11,31 +11,38 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func monitoring(args []string, patterns []string) error {
+func notifyMonitoring(args []string, patterns []string, ch chan error) {
 
 	mod := searchPath(args)
 	if mod == "" {
-		return fmt.Errorf("Not found go.mod file.")
+		setStatus(FatalStatus)
+		ch <- fmt.Errorf("Not found go.mod file.")
+		return
 	}
 
 	terminal.Verbose("Specification:", mod)
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return xerrors.Errorf("fsnotify.NewWatcher() error: %w", err)
+		setStatus(FatalStatus)
+		ch <- xerrors.Errorf("fsnotify.NewWatcher() error: %w", err)
+		return
 	}
 	defer watcher.Close()
 
 	err = registerWatcher(watcher, mod)
 	if err != nil {
-		return xerrors.Errorf("registerWatcher() error: %w", err)
+		setStatus(FatalStatus)
+		ch <- xerrors.Errorf("registerWatcher() error: %w", err)
+		return
 	}
 
 	for {
 		select {
 		case event, ok := <-watcher.Events:
 			if !ok {
-				return fmt.Errorf("not ok")
+				ch <- fmt.Errorf("watcher event not OK")
+				continue
 			}
 
 			if !ignoreFile(event.Name, patterns) {
@@ -50,15 +57,14 @@ func monitoring(args []string, patterns []string) error {
 					setStatus(WaitingForRebootStatus)
 				}
 			}
-		case err, ok := <-watcher.Errors:
-			if !ok {
-				return fmt.Errorf("not ok")
+		case err, _ := <-watcher.Errors:
+			if err != nil {
+				ch <- xerrors.Errorf("watcher errors: %w", err)
 			}
-			log.Println("error:", err)
 		}
 	}
 
-	return nil
+	return
 }
 
 func ignoreFile(path string, patterns []string) bool {
