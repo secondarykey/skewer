@@ -10,6 +10,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const ModFile = "go.mod"
+
 func notifyMonitoring(args []string, patterns []string, ch chan error) {
 
 	mod := searchPath(args)
@@ -99,8 +101,6 @@ func registerWatcher(w *fsnotify.Watcher, path string) error {
 	}
 	return nil
 }
-
-const ModFile = "go.mod"
 
 func searchPath(patterns []string) string {
 

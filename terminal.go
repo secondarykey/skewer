@@ -19,9 +19,8 @@ func startTerminal(v bool) error {
 	return nil
 }
 
-func endTerminal() {
-	log.Println("skewer terminated.")
-	os.Exit(0)
+func endTerminal(bin string) {
+	cleanup(bin)
 }
 
 func printVerbose(args ...interface{}) {

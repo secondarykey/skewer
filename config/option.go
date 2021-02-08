@@ -29,10 +29,16 @@ func SetVerbose(v bool) Option {
 	}
 }
 
-func SetPort(p int, f bool) Option {
+func SetMode(m string, p int, f bool) Option {
 	return func(c *Config) error {
+		mode := createMode(m)
+		c.Mode = mode
+		if mode != HTTPMode {
+			return fmt.Errorf("%s Mode is not implemented.", mode)
+		}
 
 		if f {
+			//HTTP mode only
 			portBuf := os.Getenv("PORT")
 			if portBuf == "" {
 				return fmt.Errorf(`if "e" is specified as an argument,it must be specified in the "PORT" environment variable.`)

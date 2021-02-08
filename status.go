@@ -2,9 +2,6 @@ package skewer
 
 import (
 	"sync"
-	"time"
-
-	"github.com/secondarykey/skewer/config"
 )
 
 type Status int
@@ -73,24 +70,4 @@ func (s Status) String() string {
 		return "HTTP Server Accessable."
 	}
 	return "NotFound Status"
-}
-
-func rebuildMonitor(s int, ch chan error) {
-
-	conf := config.Get()
-	bin := conf.Bin
-	d := time.Duration(s) * time.Second
-
-	for {
-		status = getStatus()
-		if status.canBuild() {
-			cleanup(bin)
-			go startServer(bin, conf.Port, conf.Args, ch)
-		} else if status == FatalStatus {
-			return
-		}
-		time.Sleep(d)
-	}
-
-	return
 }

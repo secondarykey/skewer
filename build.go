@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"time"
 
+	"github.com/secondarykey/skewer/config"
 	"golang.org/x/xerrors"
 )
 
@@ -55,4 +57,24 @@ func build(name string, files []string) error {
 	printVerbose("Build Complate.")
 
 	return nil
+}
+
+func rebuildMonitor(s int, ch chan error) {
+
+	conf := config.Get()
+	bin := conf.Bin
+	d := time.Duration(s) * time.Second
+
+	for {
+		status = getStatus()
+		if status.canBuild() {
+			cleanup(bin)
+			go startServer(bin, conf.Port, conf.Args, ch)
+		} else if status == FatalStatus {
+			return
+		}
+		time.Sleep(d)
+	}
+
+	return
 }

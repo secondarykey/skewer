@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"golang.org/x/xerrors"
 )
 
@@ -12,6 +14,27 @@ type Config struct {
 	Bin         string
 	Args        []string
 	IgnoreFiles []string
+	Mode        Mode
+}
+
+type Mode int
+
+const (
+	HTTPMode Mode = iota
+	TestMode
+	ProcessMode
+)
+
+func createMode(m string) Mode {
+	v := strings.ToLower(m)
+	switch v {
+	case "http":
+		return HTTPMode
+	case "test":
+		return TestMode
+	default:
+		return ProcessMode
+	}
 }
 
 var gConf *Config
