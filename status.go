@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/secondarykey/skewer/config"
-	"github.com/secondarykey/skewer/terminal"
 )
 
 type Status int
@@ -37,7 +36,7 @@ func setStatus(s Status) {
 		return
 	}
 	status = s
-	terminal.Verbose("Status:", s)
+	printVerbose("Status:", s)
 }
 
 func (s Status) reboot() bool {

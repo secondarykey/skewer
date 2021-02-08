@@ -1,17 +1,18 @@
-package process
+package skewer
 
 import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 
-	"github.com/secondarykey/skewer/terminal"
 	"golang.org/x/xerrors"
 )
 
 var current *os.Process
+var processMutex sync.Mutex
 
-func Run(name string) error {
+func run(name string) error {
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -19,33 +20,35 @@ func Run(name string) error {
 	}
 
 	cmd := exec.Command(filepath.Join(wd, name))
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return xerrors.Errorf("StdoutPipe error: %w", err)
-	}
 
-	stderr, err := cmd.StderrPipe()
+	err = setCommandPipe(cmd)
 	if err != nil {
-		return xerrors.Errorf("StdoutPipe error: %w", err)
+		return xerrors.Errorf("setCommandPipe() error: %w", err)
 	}
-	terminal.SetPipe(stdout, stderr)
 
 	err = cmd.Start()
 	if err != nil {
 		return xerrors.Errorf("http server start error: %w", err)
 	}
+
+	processMutex.Lock()
+	defer processMutex.Unlock()
 	current = cmd.Process
 
 	return nil
 }
 
-func Kill() error {
+func kill() error {
 	//TODO リトライする
+
+	processMutex.Lock()
+	defer processMutex.Unlock()
 	if current != nil {
 		err := current.Kill()
 		if err != nil {
 			return xerrors.Errorf("current process kill error: %w", err)
 		}
 	}
+
 	return nil
 }

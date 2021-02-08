@@ -1,16 +1,14 @@
-package build
+package skewer
 
 import (
 	"fmt"
 	"log"
 	"os/exec"
 
-	"github.com/secondarykey/skewer/terminal"
-
 	"golang.org/x/xerrors"
 )
 
-func Check() error {
+func checkGo() error {
 	path, err := exec.LookPath("go")
 	if err != nil {
 		return xerrors.Errorf("go is not avaliable", err)
@@ -19,7 +17,7 @@ func Check() error {
 	return nil
 }
 
-func Run(name string, files []string) error {
+func build(name string, files []string) error {
 
 	if len(files) == 0 {
 		return fmt.Errorf("build file required.")
@@ -34,32 +32,27 @@ func Run(name string, files []string) error {
 	//指定されたファイルをnameでビルド
 	cmd := exec.Command("go", args...)
 
-	stdout, err := cmd.StdoutPipe()
+	err := setCommandPipe(cmd)
 	if err != nil {
-		return xerrors.Errorf("StdoutPipe error: %w", err)
+		return xerrors.Errorf("setCommandPipe() error: %w", err)
 	}
 
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return xerrors.Errorf("StdoutPipe error: %w", err)
-	}
-	terminal.SetPipe(stdout, stderr)
-
-	terminal.Verbose("Build Start.")
-	terminal.Verbose(cmd)
+	printVerbose("Build Start.")
+	printVerbose(cmd)
 
 	err = cmd.Start()
 	if err != nil {
 		return xerrors.Errorf("go build error: %w", err)
 	}
 
-	terminal.Verbose("Build wait...")
+	printVerbose("Build wait...")
+
 	err = cmd.Wait()
 	if err != nil {
 		return xerrors.Errorf("command wait error: %w", err)
 	}
 
-	terminal.Verbose("Build Complate.")
+	printVerbose("Build Complate.")
 
 	return nil
 }

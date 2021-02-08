@@ -8,10 +8,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/secondarykey/skewer/build"
 	"github.com/secondarykey/skewer/config"
-	"github.com/secondarykey/skewer/process"
-	"github.com/secondarykey/skewer/terminal"
+
 	"golang.org/x/xerrors"
 )
 
@@ -29,7 +27,7 @@ func Listen(opts ...config.Option) error {
 	ch := make(chan error)
 	done := make(chan error)
 
-	terminal.Start(conf.Verbose)
+	startTerminal(conf.Verbose)
 
 	go func() {
 		for {
@@ -37,7 +35,7 @@ func Listen(opts ...config.Option) error {
 			case err := <-ch:
 				if err != nil {
 					msg := fmt.Sprintf("%+v", err)
-					terminal.Verbose(msg)
+					printVerbose(msg)
 					if getStatus() == FatalStatus {
 						done <- err
 						return
@@ -61,7 +59,7 @@ func Listen(opts ...config.Option) error {
 		<-quit
 
 		cleanup(bin)
-		terminal.End()
+		endTerminal()
 	}()
 
 	setStatus(WaitingForRebootStatus)
@@ -98,7 +96,7 @@ func checkConnection(port int) (chan bool, error) {
 
 func cleanup(bin string) {
 
-	err := process.Kill()
+	err := kill()
 	if err != nil {
 		log.Println(err)
 	}
@@ -120,7 +118,7 @@ func startServer(bin string, port int, args []string, ch chan error) {
 
 	setStatus(BuildStatus)
 	//use goroutine
-	err := build.Run(bin, args)
+	err := build(bin, args)
 	if err != nil {
 		log.Println("Build Error")
 		setStatus(BuildErrorStatus)
@@ -130,7 +128,7 @@ func startServer(bin string, port int, args []string, ch chan error) {
 
 	setStatus(StartupStatus)
 	//コマンドを実行
-	err = process.Run(bin)
+	err = run(bin)
 	if err != nil {
 		log.Println("Process Run Error")
 		setStatus(StartupErrorStatus)

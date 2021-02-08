@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/secondarykey/skewer/terminal"
 	"golang.org/x/xerrors"
 )
 
@@ -20,7 +19,7 @@ func notifyMonitoring(args []string, patterns []string, ch chan error) {
 		return
 	}
 
-	terminal.Verbose("Specification:", mod)
+	printVerbose("Specification:", mod)
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -52,7 +51,7 @@ func notifyMonitoring(args []string, patterns []string, ch chan error) {
 
 				s := getStatus()
 				if s.reboot() {
-					terminal.Verbose(event.Name)
+					printVerbose(event.Name)
 					log.Println("Waiting for reboot.")
 					setStatus(WaitingForRebootStatus)
 				}
