@@ -63,6 +63,7 @@ func defaultConfig() *Config {
 	conf.Args = nil
 	conf.IgnoreFiles = nil
 	conf.Bin = "skewer-bin"
+	conf.Mode = HTTPMode
 
 	return &conf
 }

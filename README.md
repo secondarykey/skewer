@@ -17,9 +17,29 @@ Take an argument to build the Go source.
 
 ```
 skewer main.go
+skewer *.go
+skewer .
+skewer _cmd/main.go
 ```
 
 Please read Help for details.
+
+# More...
+
+I created it to monitor HTTPServer, but I thought it would be easier to use it for testing, so I made it possible to switch modes.
+
+```
+skewer -m test .
+```
+
+This will keep the tested.
+
+If the mode is other than "http" and "test", it will be the process mode.
+
+```
+skewer -m process main.go
+```
+
 
 # Operation Explanation
 
@@ -36,7 +56,8 @@ I will write a memo for development.
 
 ## Argument
 
+```
 -t Change the directory to monitor
 -a Specifying arguments when stating a process.
 -d Monitoring lap time(default 5s)
-
+```

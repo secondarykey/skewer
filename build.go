@@ -2,7 +2,6 @@ package skewer
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"time"
 
@@ -10,12 +9,61 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func checkGo() error {
+func checkGo() bool {
 	path, err := exec.LookPath("go")
 	if err != nil {
-		return xerrors.Errorf("go is not avaliable", err)
+		printVerbose("go is not avaliable:", err)
+		return false
 	}
-	log.Println("go is available at", path)
+	printVerbose("go is available at", path)
+	return true
+}
+
+func test(a []string, pkgs []string) error {
+
+	if len(pkgs) == 0 {
+		return fmt.Errorf("test packages required.")
+	}
+
+	args := make([]string, 0, 1+len(pkgs)+len(a))
+	args = append(args, "test")
+	args = append(args, args...)
+	args = append(args, pkgs...)
+
+	//指定されたファイルをnameでビルド
+	cmd := exec.Command("go", args...)
+
+	err := runCommand("Test", cmd)
+	if err != nil {
+		return xerrors.Errorf("command run error: %w", err)
+	}
+	return nil
+}
+
+func runCommand(title string, cmd *exec.Cmd) error {
+
+	err := setCommandPipe(cmd)
+	if err != nil {
+		return xerrors.Errorf("setCommandPipe() error: %w", err)
+	}
+
+	printVerbose(title, "Start.")
+	printVerbose(cmd)
+
+	err = cmd.Start()
+	if err != nil {
+		return xerrors.Errorf("Go %s command error: %w", title, err)
+	}
+
+	printVerbose(title, "wait...")
+
+	err = cmd.Wait()
+	if err != nil {
+		return xerrors.Errorf("Go %s command wait error: %w", title, err)
+	}
+
+	printVerbose(title, "Complate.")
+
 	return nil
 }
 
@@ -34,27 +82,10 @@ func build(name string, files []string) error {
 	//指定されたファイルをnameでビルド
 	cmd := exec.Command("go", args...)
 
-	err := setCommandPipe(cmd)
+	err := runCommand("Build", cmd)
 	if err != nil {
-		return xerrors.Errorf("setCommandPipe() error: %w", err)
+		return xerrors.Errorf("command run error: %w", err)
 	}
-
-	printVerbose("Build Start.")
-	printVerbose(cmd)
-
-	err = cmd.Start()
-	if err != nil {
-		return xerrors.Errorf("go build error: %w", err)
-	}
-
-	printVerbose("Build wait...")
-
-	err = cmd.Wait()
-	if err != nil {
-		return xerrors.Errorf("command wait error: %w", err)
-	}
-
-	printVerbose("Build Complate.")
 
 	return nil
 }
@@ -64,6 +95,8 @@ func rebuildMonitor(s int, ch chan error) {
 	conf := config.Get()
 	bin := conf.Bin
 	d := time.Duration(s) * time.Second
+
+	// TODO TestMode
 
 	for {
 		status = getStatus()

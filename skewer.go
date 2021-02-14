@@ -12,7 +12,9 @@ import (
 
 func Patrol(opts ...config.Option) error {
 
-	//TODO Go comman exists
+	if !checkGo() {
+		return xerrors.Errorf(`requires "go" to skewer run.`)
+	}
 
 	err := config.Set(opts)
 	if err != nil {

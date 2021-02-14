@@ -46,6 +46,8 @@ func notifyMonitoring(args []string, patterns []string, ch chan error) {
 				continue
 			}
 
+			//TODO new directory
+
 			if !ignoreFile(event.Name, patterns) {
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					//log.Println("modified file:", event.Name)
