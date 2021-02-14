@@ -22,24 +22,23 @@ skewer .
 skewer _cmd/main.go
 ```
 
-Please read Help for details.
+Please read Help for details.(Not implemented...
 
 # More...
 
-I created it to monitor HTTPServer, but I thought it would be easier to use it for testing, so I made it possible to switch modes.
+you can also loop the test.
 
 ```
 skewer -m test .
 ```
 
-This will keep the tested.
-
-If the mode is other than "http" and "test", it will be the process mode.
+Maybe it's a subcommand...
 
 ```
-skewer -m process main.go
+(e.g.
+  skewer http _cmd/main.go 
+  skewer test ./...
 ```
-
 
 # Operation Explanation
 
@@ -58,6 +57,6 @@ I will write a memo for development.
 
 ```
 -t Change the directory to monitor
--a Specifying arguments when stating a process.
+-a Specifying arguments when stating a process.(and TestMode)
 -d Monitoring lap time(default 5s)
 ```
