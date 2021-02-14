@@ -33,7 +33,7 @@ func SetMode(m string, p int, f bool) Option {
 	return func(c *Config) error {
 		mode := createMode(m)
 		c.Mode = mode
-		if mode != HTTPMode {
+		if mode == ProcessMode {
 			return fmt.Errorf("%s Mode is not implemented.", mode)
 		}
 

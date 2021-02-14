@@ -37,6 +37,17 @@ func createMode(m string) Mode {
 	}
 }
 
+func (m Mode) String() string {
+	switch m {
+	case HTTPMode:
+		return "HTTPMode"
+	case TestMode:
+		return "TestMode"
+	default:
+		return "ProcessMode"
+	}
+}
+
 var gConf *Config
 
 func init() {
