@@ -25,7 +25,7 @@ func run(name string) error {
 
 	cmd := exec.Command(filepath.Join(wd, name))
 
-	err = setCommandPipe(cmd)
+	err = setCommandPipe(cmd, false)
 	if err != nil {
 		return xerrors.Errorf("setCommandPipe() error: %w", err)
 	}
@@ -150,4 +150,22 @@ func startServer(bin string, port int, args []string, ch chan error) {
 			}
 		}()
 	}
+}
+
+func startTest(args []string, ch chan error) {
+	log.Println("Start Test.")
+
+	setStatus(BuildStatus)
+
+	err := test([]string{"-count", "1"}, args)
+	if err != nil {
+
+		setStatus(BuildErrorStatus)
+
+		//TODO テストエラーはOKでビルドエラー時は
+		ch <- err
+		return
+	}
+
+	setStatus(OKStatus)
 }

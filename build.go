@@ -27,22 +27,22 @@ func test(a []string, pkgs []string) error {
 
 	args := make([]string, 0, 1+len(pkgs)+len(a))
 	args = append(args, "test")
-	args = append(args, args...)
+	args = append(args, a...)
 	args = append(args, pkgs...)
 
 	//指定されたファイルをnameでビルド
 	cmd := exec.Command("go", args...)
 
-	err := runCommand("Test", cmd)
+	err := runCommand("Test", cmd, true)
 	if err != nil {
 		return xerrors.Errorf("command run error: %w", err)
 	}
 	return nil
 }
 
-func runCommand(title string, cmd *exec.Cmd) error {
+func runCommand(title string, cmd *exec.Cmd, test bool) error {
 
-	err := setCommandPipe(cmd)
+	err := setCommandPipe(cmd, test)
 	if err != nil {
 		return xerrors.Errorf("setCommandPipe() error: %w", err)
 	}
@@ -82,7 +82,7 @@ func build(name string, files []string) error {
 	//指定されたファイルをnameでビルド
 	cmd := exec.Command("go", args...)
 
-	err := runCommand("Build", cmd)
+	err := runCommand("Build", cmd, false)
 	if err != nil {
 		return xerrors.Errorf("command run error: %w", err)
 	}
@@ -94,6 +94,7 @@ func rebuildMonitor(s int, ch chan error) {
 
 	conf := config.Get()
 	bin := conf.Bin
+	mode := conf.Mode
 	d := time.Duration(s) * time.Second
 
 	// TODO TestMode
@@ -101,8 +102,15 @@ func rebuildMonitor(s int, ch chan error) {
 	for {
 		status = getStatus()
 		if status.canBuild() {
-			cleanup(bin)
-			go startServer(bin, conf.Port, conf.Args, ch)
+
+			switch mode {
+			case config.HTTPMode:
+				cleanup(bin)
+				go startServer(bin, conf.Port, conf.Args, ch)
+			case config.TestMode:
+				go startTest(conf.Args, ch)
+			}
+
 		} else if status == FatalStatus {
 			return
 		}
