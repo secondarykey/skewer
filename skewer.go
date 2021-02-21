@@ -30,6 +30,11 @@ func Patrol(opts ...config.Option) error {
 	startTerminal(conf.Verbose)
 	defer endTerminal(bin)
 
+	paths, err := searchWatchingPath(conf.Args)
+	if err != nil {
+		return xerrors.Errorf("searchWatchingPath() error: %w", err)
+	}
+
 	// error signal
 	go func() {
 		for {
@@ -50,7 +55,7 @@ func Patrol(opts ...config.Option) error {
 
 	// fsnotify
 	go func() {
-		notifyMonitoring(conf.Args, conf.IgnoreFiles, ch)
+		notifyMonitoring(paths, conf.IgnoreFiles, ch)
 	}()
 
 	// Ctl + c Signal

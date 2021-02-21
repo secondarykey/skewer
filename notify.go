@@ -12,16 +12,23 @@ import (
 
 const ModFile = "go.mod"
 
-func notifyMonitoring(args []string, patterns []string, ch chan error) {
+func searchWatchingPath(args []string) ([]string, error) {
 
 	mod := searchPath(args)
 	if mod == "" {
-		setStatus(FatalStatus)
-		ch <- fmt.Errorf("Not found go.mod file.")
-		return
+		return nil, xerrors.Errorf("NotFound go.mod file -> %v", args)
+	}
+	printVerbose("Specification:", mod)
+
+	paths, err := getDirectories(mod)
+	if err != nil {
+		return nil, xerrors.Errorf("getDirectories() error: %w", err)
 	}
 
-	printVerbose("Specification:", mod)
+	return paths, nil
+}
+
+func notifyMonitoring(paths []string, patterns []string, ch chan error) {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -31,11 +38,13 @@ func notifyMonitoring(args []string, patterns []string, ch chan error) {
 	}
 	defer watcher.Close()
 
-	err = registerWatcher(watcher, mod)
-	if err != nil {
-		setStatus(FatalStatus)
-		ch <- xerrors.Errorf("registerWatcher() error: %w", err)
-		return
+	for _, path := range paths {
+		err = watcher.Add(path)
+		if err != nil {
+			setStatus(FatalStatus)
+			ch <- xerrors.Errorf("watcher Add() error: %w", err)
+			return
+		}
 	}
 
 	for {
@@ -47,10 +56,10 @@ func notifyMonitoring(args []string, patterns []string, ch chan error) {
 			}
 
 			//TODO new directory
+			log.Println("event file:", event.Name)
 
 			if !ignoreFile(event.Name, patterns) {
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					//log.Println("modified file:", event.Name)
 				}
 
 				s := getStatus()
@@ -83,25 +92,27 @@ func ignoreFile(path string, patterns []string) bool {
 	return false
 }
 
-func registerWatcher(w *fsnotify.Watcher, path string) error {
-	err := w.Add(path)
-	if err != nil {
-		return xerrors.Errorf("watcher.Add() error: %w", err)
-	}
+func getDirectories(path string) ([]string, error) {
+
+	paths := make([]string, 0, 100)
+	paths = append(paths, path)
+
 	entry, err := os.ReadDir(path)
 	if err != nil {
-		return xerrors.Errorf("os.ReadDir() error: %w", err)
+		return nil, xerrors.Errorf("os.ReadDir() error: %w", err)
 	}
 
 	for _, info := range entry {
 		if info.IsDir() {
-			err := registerWatcher(w, filepath.Join(path, info.Name()))
+			work, err := getDirectories(filepath.Join(path, info.Name()))
 			if err != nil {
-				return xerrors.Errorf("registerWatcher() error: %w", err)
+				return nil, xerrors.Errorf("getDirectories() error: %w", err)
 			}
+			paths = append(paths, work...)
 		}
 	}
-	return nil
+
+	return paths, nil
 }
 
 func searchPath(patterns []string) string {
