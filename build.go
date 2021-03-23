@@ -106,9 +106,9 @@ func rebuildMonitor(s int, ch chan error) {
 			switch mode {
 			case config.HTTPMode:
 				cleanup(bin)
-				go startServer(bin, conf.Port, conf.Args, ch)
+				go startServer(bin, conf.Port, conf.Files, conf.Args, ch)
 			case config.TestMode:
-				go startTest(conf.Args, ch)
+				go startTest(conf.Files, ch)
 			}
 
 		} else if status == FatalStatus {

@@ -12,12 +12,24 @@ import (
 
 type Option func(*Config) error
 
-func SetArgs(args []string) Option {
+func SetFiles(files []string) Option {
 	return func(c *Config) error {
-		if args == nil || len(args) <= 0 {
+		if files == nil || len(files) <= 0 {
 			return xerrors.Errorf("build files required.")
 		}
-		c.Args = args
+		c.Files = files
+		return nil
+	}
+}
+
+func SetArgs(buf string) Option {
+	return func(c *Config) error {
+		if buf != "" {
+			args := strings.Split(buf, " ")
+			c.Args = args
+		} else {
+			c.Args = nil
+		}
 		return nil
 	}
 }

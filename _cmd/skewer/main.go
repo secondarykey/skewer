@@ -15,6 +15,7 @@ var (
 	binName     string
 	ignoreFiles string
 	mode        string
+	args        string
 )
 
 func init() {
@@ -25,18 +26,20 @@ func init() {
 	flag.StringVar(&binName, "n", "skewer-bin", "Name of the file to create.")
 	flag.StringVar(&ignoreFiles, "i", ".*", `Specifying files to exclude monitoring(glob pattern,multiple can be specified by "|")P`)
 	flag.StringVar(&mode, "m", "http", `Plan to implement test mode etc...`)
+	flag.StringVar(&args, "args", "", `go run arguments`)
 }
 
 func main() {
 
 	flag.Parse()
-	args := flag.Args()
+	files := flag.Args()
 
 	err := skewer.Patrol(
 		config.SetVerbose(verbose),
-		config.SetArgs(args),
+		config.SetFiles(files),
 		config.SetMode(mode, port, portEnv),
 		config.SetBin(binName),
+		config.SetArgs(args),
 		config.SetIgnoreFiles(ignoreFiles))
 
 	if err != nil {

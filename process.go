@@ -16,14 +16,14 @@ import (
 var current *os.Process
 var processMutex sync.Mutex
 
-func run(name string) error {
+func run(name string, args []string) error {
 
 	wd, err := os.Getwd()
 	if err != nil {
 		return xerrors.Errorf("work directory get error: %w", err)
 	}
 
-	cmd := exec.Command(filepath.Join(wd, name))
+	cmd := exec.Command(filepath.Join(wd, name), args...)
 
 	err = setCommandPipe(cmd, false)
 	if err != nil {
@@ -100,13 +100,13 @@ func cleanup(bin string) {
 	}
 }
 
-func startServer(bin string, port int, args []string, ch chan error) {
+func startServer(bin string, port int, files []string, args []string, ch chan error) {
 
 	log.Println("Start Build and Launch.")
 
 	setStatus(BuildStatus)
 
-	err := build(bin, args)
+	err := build(bin, files)
 	if err != nil {
 		log.Println("Build Error")
 		setStatus(BuildErrorStatus)
@@ -117,7 +117,7 @@ func startServer(bin string, port int, args []string, ch chan error) {
 	setStatus(StartupStatus)
 
 	// run process
-	err = run(bin)
+	err = run(bin, args)
 	if err != nil {
 		log.Println("Process Run Error")
 		setStatus(StartupErrorStatus)

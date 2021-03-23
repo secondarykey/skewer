@@ -30,7 +30,7 @@ func Patrol(opts ...config.Option) error {
 	startTerminal(conf.Verbose)
 	defer endTerminal(bin)
 
-	paths, err := searchWatchingPath(conf.Args)
+	paths, err := searchWatchingPath(conf.Files)
 	if err != nil {
 		return xerrors.Errorf("searchWatchingPath() error: %w", err)
 	}

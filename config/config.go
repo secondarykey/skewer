@@ -12,8 +12,9 @@ type Config struct {
 	Schema      string
 	Server      string
 	Bin         string
-	Args        []string
+	Files       []string
 	IgnoreFiles []string
+	Args        []string
 	Mode        Mode
 }
 
@@ -71,7 +72,7 @@ func defaultConfig() *Config {
 	conf.Verbose = false
 	conf.Schema = "http"
 	conf.Server = "localhost"
-	conf.Args = nil
+	conf.Files = nil
 	conf.IgnoreFiles = nil
 	conf.Bin = "skewer-bin"
 	conf.Mode = HTTPMode

@@ -56,7 +56,7 @@ func notifyMonitoring(paths []string, patterns []string, ch chan error) {
 			}
 
 			//TODO new directory
-			log.Println("event file:", event.Name)
+			//log.Println("event file:", event.Name)
 
 			if !ignoreFile(event.Name, patterns) {
 				if event.Op&fsnotify.Write == fsnotify.Write {
