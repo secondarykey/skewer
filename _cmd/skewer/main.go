@@ -12,6 +12,7 @@ var (
 	port        int
 	portEnv     bool
 	verbose     bool
+	duration    float64
 	binName     string
 	ignoreFiles string
 	mode        string
@@ -23,6 +24,7 @@ func init() {
 	flag.BoolVar(&portEnv, "e", false, "Get the application port number from an environment variable.")
 	flag.BoolVar(&verbose, "v", false, "Show verbose.")
 
+	flag.Float64Var(&duration, "d", 0.5, "Lock time")
 	flag.StringVar(&binName, "n", "skewer-bin", "Name of the file to create.")
 	flag.StringVar(&ignoreFiles, "i", ".*", `Specifying files to exclude monitoring(glob pattern,multiple can be specified by "|")P`)
 	flag.StringVar(&mode, "m", "http", `Plan to implement test mode etc...`)
@@ -38,6 +40,7 @@ func main() {
 		config.SetVerbose(verbose),
 		config.SetFiles(files),
 		config.SetMode(mode, port, portEnv),
+		config.SetDuration(duration),
 		config.SetBin(binName),
 		config.SetArgs(args),
 		config.SetIgnoreFiles(ignoreFiles))

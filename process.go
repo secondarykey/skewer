@@ -62,8 +62,6 @@ func checkConnection(port int) (chan bool, error) {
 
 	ch := make(chan bool)
 
-	//TODO ???
-
 	go func() {
 		var conn net.Conn
 		var err error
@@ -106,7 +104,7 @@ func startServer(bin string, port int, files []string, args []string, ch chan er
 
 	setStatus(BuildStatus)
 
-	err := build(bin, files)
+	err := buildCommand(bin, files)
 	if err != nil {
 		log.Println("Build Error")
 		setStatus(BuildErrorStatus)
@@ -153,11 +151,12 @@ func startServer(bin string, port int, files []string, args []string, ch chan er
 }
 
 func startTest(args []string, ch chan error) {
+
 	log.Println("Start Test.")
 
 	setStatus(BuildStatus)
 
-	err := test([]string{"-count", "1"}, args)
+	err := testCommand([]string{"-count", "1"}, args)
 	if err != nil {
 
 		setStatus(BuildErrorStatus)

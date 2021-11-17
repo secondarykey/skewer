@@ -50,6 +50,7 @@ func notifyMonitoring(paths []string, patterns []string, ch chan error) {
 	for {
 		select {
 		case event, ok := <-watcher.Events:
+
 			if !ok {
 				ch <- fmt.Errorf("watcher event not OK")
 				continue
@@ -59,6 +60,7 @@ func notifyMonitoring(paths []string, patterns []string, ch chan error) {
 			//log.Println("event file:", event.Name)
 
 			if !ignoreFile(event.Name, patterns) {
+
 				if event.Op&fsnotify.Write == fsnotify.Write {
 				}
 

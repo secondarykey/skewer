@@ -3,6 +3,7 @@ package skewer
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 
 	"github.com/secondarykey/skewer/config"
@@ -69,9 +70,19 @@ func Patrol(opts ...config.Option) error {
 	// rebuild
 	go func() {
 		setStatus(WaitingForRebootStatus)
-		rebuildMonitor(5, ch)
+		rebuildMonitor(1, ch)
 	}()
 
 	// wait
 	return <-done
+}
+
+func checkGo() bool {
+	path, err := exec.LookPath("go")
+	if err != nil {
+		printVerbose("go is not avaliable:", err)
+		return false
+	}
+	printVerbose("go is available at", path)
+	return true
 }

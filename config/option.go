@@ -85,3 +85,10 @@ func SetBin(n string) Option {
 		return nil
 	}
 }
+
+func SetDuration(d float64) Option {
+	return func(c *Config) error {
+		c.Duration = d
+		return nil
+	}
+}
